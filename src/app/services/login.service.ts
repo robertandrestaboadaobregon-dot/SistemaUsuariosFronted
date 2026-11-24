@@ -16,6 +16,10 @@ export class LoginService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
+  private isBrowser():boolean{
+    return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+  }
+
   login(request: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.BASE_URL}/auth/login`, request).pipe(
       tap((resultado) => {
@@ -35,8 +39,32 @@ export class LoginService {
   }
 
   logout():void{
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
+    if(this.isBrowser()){
+      localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.USER_KEY);
+    }
+
     this.router.navigate(['/login']);
   }
+
+  getToken():string | null{
+    if(!this.isBrowser()){
+      return null;
+    }
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  getUser():{username:string; nombre:string; roles:string[] } | null{
+    if(!this.isBrowser()){
+      return null;
+    }
+    const raw = localStorage.getItem(this.USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }
+
+  isLogged():boolean{
+    return !!this.getToken();
+  }
+
+
 }
